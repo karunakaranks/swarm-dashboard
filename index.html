@@ -1337,7 +1337,12 @@ async function initSupabase(url,key){
   sbClient=supabase.createClient(url,key,{realtime:{params:{eventsPerSecond:10}}});
   const{data,error}=await sbClient.from("swarm_tasks").select("*").order("created_at",{ascending:false}).limit(500);
   if(error)throw new Error(error.message);
-  tasks=data;render();
+  tasks=data;
+  const _p=data.filter(t=>t.status==='pending').length;
+  const _a=data.filter(t=>t.status==='in-progress').length;
+  console.log(`[swarm] Initial fetch: ${data.length} tasks, ${_p} pending, ${_a} active`);
+  if(_p||_a)console.log('[swarm] Non-done:',data.filter(t=>t.status!=='done'&&t.status!=='failed').map(t=>({id:t.id,status:t.status})));
+  render();
   setLive("connecting","LINKING…");
   channel=sbClient.channel("swarm_live")
     .on("postgres_changes",{event:"*",schema:"public",table:"swarm_tasks"},p=>{
@@ -1371,7 +1376,12 @@ function startPollFallback(){
     if(!sbClient)return;
     try{
       const{data}=await sbClient.from("swarm_tasks").select("*").order("created_at",{ascending:false}).limit(500);
-      if(data){tasks=data;render();}
+      if(data){
+        const _p=data.filter(t=>t.status==='pending').length;
+        const _a=data.filter(t=>t.status==='in-progress').length;
+        if(_p||_a)console.log(`[swarm-poll] ${_p} pending, ${_a} active`);
+        tasks=data;render();
+      }
     }catch(e){/* silent */}
   },15000);
 }
