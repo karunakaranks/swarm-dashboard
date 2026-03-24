@@ -1,7 +1,7 @@
 // Service Worker — Swarm Monitor PWA
 // Auto-update: activates immediately via skipWaiting; uses network-first for navigations for freshness.
 
-const CACHE_VERSION = 'swarm-v1';
+const CACHE_VERSION = 'swarm-v2';
 
 // Core app shell assets (must succeed for install)
 const CORE_ASSETS = [
@@ -92,7 +92,13 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Other assets — cache first, fallback to network
+  // API calls (supabase.co) — NEVER cache, always network
+  if (req.url.includes('supabase.co')) {
+    e.respondWith(fetch(req));
+    return;
+  }
+
+  // Other assets (JS, CSS, fonts, icons) — cache first, fallback to network
   e.respondWith(
     caches.match(req).then(cached => {
       if (cached) return cached;
