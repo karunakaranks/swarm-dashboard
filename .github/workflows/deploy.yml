@@ -1,0 +1,73 @@
+name: Deploy Dashboard PWA
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate PNG icons from SVG
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends librsvg2-bin
+          cd icons
+          rsvg-convert -w 192 -h 192 icon.svg -o icon-192.png
+          rsvg-convert -w 512 -h 512 icon.svg -o icon-512.png
+
+      - name: Verify no sensitive data
+        run: |
+          if grep -rEi '(eyJ[A-Za-z0-9_-]{20,}|sk-[a-zA-Z0-9]{20,}|AKIA[A-Z0-9]{16}|ghp_[a-zA-Z0-9]{36}|password\s*[:=]\s*["\x27][^\s]+)' \
+            --include='*.html' --include='*.js' --include='*.json' .; then
+            echo "::error::Sensitive data detected!"
+            exit 1
+          fi
+          echo "No sensitive data found"
+
+      - name: Prepare deploy directory
+        run: |
+          mkdir -p _deploy/icons
+          cp index.html manifest.json sw.js .nojekyll _deploy/
+          cp icons/* _deploy/icons/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _deploy
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  lighthouse:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Audit deployed site
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: |
+            ${{ needs.deploy.outputs.url || format('https://{0}.github.io/{1}/', github.repository_owner, github.event.repository.name) }}
+          budgetPath: .github/lighthouse-budget.json
+          uploadArtifacts: true

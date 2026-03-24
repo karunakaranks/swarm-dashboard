@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#07050e"/>
+  <circle cx="256" cy="256" r="140" fill="none" stroke="#b041ff" stroke-width="16" opacity="0.6"/>
+  <circle cx="256" cy="256" r="80" fill="none" stroke="#e040fb" stroke-width="10" opacity="0.8"/>
+  <circle cx="256" cy="256" r="24" fill="#b041ff"/>
+  <!-- Swarm nodes -->
+  <circle cx="160" cy="160" r="10" fill="#7fff3a" opacity="0.7"/>
+  <circle cx="352" cy="160" r="10" fill="#7fff3a" opacity="0.7"/>
+  <circle cx="160" cy="352" r="10" fill="#ffaa00" opacity="0.7"/>
+  <circle cx="352" cy="352" r="10" fill="#ffaa00" opacity="0.7"/>
+  <!-- Connecting lines -->
+  <line x1="160" y1="160" x2="256" y2="256" stroke="#b041ff" stroke-width="3" opacity="0.4"/>
+  <line x1="352" y1="160" x2="256" y2="256" stroke="#b041ff" stroke-width="3" opacity="0.4"/>
+  <line x1="160" y1="352" x2="256" y2="256" stroke="#b041ff" stroke-width="3" opacity="0.4"/>
+  <line x1="352" y1="352" x2="256" y2="256" stroke="#b041ff" stroke-width="3" opacity="0.4"/>
+</svg>
