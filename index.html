@@ -560,23 +560,20 @@ tbody tr.task-row[data-status="failed"]     td:first-child{border-left-color:#ff
 .task-card-item[data-status="done"]       {border-left-color:#7fff3a88;}
 .task-card-item[data-status="failed"]     {border-left-color:#ff3b6e88;}
 
-/* ── Toast notifications ── */
-.toast-stack{position:fixed;bottom:20px;right:20px;z-index:700;
-  display:flex;flex-direction:column;gap:8px;pointer-events:none;}
-.toast{
-  background:var(--bg1);border:1px solid var(--border);border-radius:4px;
-  padding:10px 14px;font-size:12px;color:var(--text0);
-  display:flex;align-items:center;gap:10px;max-width:320px;
-  pointer-events:auto;box-shadow:0 4px 20px rgba(0,0,0,.5);
-  animation:toastin .25s ease-out;
-}
-.toast.out{animation:toastout .25s ease-in forwards;}
-@keyframes toastin{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
-@keyframes toastout{from{opacity:1;transform:none}to{opacity:0;transform:translateX(20px)}}
-.toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.toast-msg{flex:1;line-height:1.4;}
-.toast-dismiss{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0;}
-.toast-dismiss:hover{color:var(--text1);}
+/* ── Status ticker (fixed bar, replaces floating toasts) ── */
+.status-ticker{position:fixed;top:0;left:0;right:0;z-index:700;
+  background:var(--bg1);border-bottom:1px solid var(--border);
+  padding:6px 16px;font-size:11px;color:var(--text2);
+  display:flex;align-items:center;gap:10px;
+  transform:translateY(-100%);transition:transform .2s ease;
+  pointer-events:auto;}
+.status-ticker.visible{transform:translateY(0);}
+.status-ticker-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.status-ticker-msg{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.status-ticker-dismiss{background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:0 4px;flex-shrink:0;}
+.status-ticker-dismiss:hover{color:var(--text1);}
+/* Keep legacy .toast-stack hidden for compat */
+.toast-stack{display:none;}
 
 /* ── PWA Install Banner ── */
 .pwa-install-banner{
@@ -1053,6 +1050,11 @@ tbody tr.task-row[data-status="failed"]     td:first-child{border-left-color:#ff
   <span id="ptr-label">PULL TO SYNC</span>
 </div>
 <div class="toast-stack" id="toast-stack"></div>
+<div class="status-ticker" id="status-ticker">
+  <div class="status-ticker-dot" id="ticker-dot"></div>
+  <div class="status-ticker-msg" id="ticker-msg"></div>
+  <button class="status-ticker-dismiss" id="ticker-dismiss">&times;</button>
+</div>
 
 <!-- ── Swarm vein animation layer ───────────────────────────────────────────
      Organic bezier veins radiating from 3 hive nodes.
@@ -1342,10 +1344,13 @@ async function initSupabase(url,key){
       const{eventType,new:nr,old:or}=p;
       if(eventType==="INSERT"){tasks.unshift(nr);recentlyChanged.add(nr.id);
         showToast(`NEW: ${(nr.task||nr.slug||nr.id||'').slice(0,40)}`, STATUS_META['pending'].color);}
-      else if(eventType==="UPDATE"){const i=tasks.findIndex(t=>t.id===nr.id);if(i!==-1)tasks[i]=nr;else tasks.unshift(nr);recentlyChanged.add(nr.id);
-        if(nr.status==='done')   showToast(`DONE: ${(nr.task||nr.slug||'').slice(0,40)}`,   STATUS_META['done'].color);
-        else if(nr.status==='failed') showToast(`FAILED: ${(nr.task||nr.slug||'').slice(0,40)}`, STATUS_META['failed'].color);
-        else if(nr.status==='in-progress') showToast(`ACTIVE: ${(nr.task||nr.slug||'').slice(0,40)}`, STATUS_META['in-progress'].color);
+      else if(eventType==="UPDATE"){const i=tasks.findIndex(t=>t.id===nr.id);if(i!==-1){const prev=tasks[i];tasks[i]=nr;
+        // Only toast on status transitions, not every progress update
+        if(prev.status!==nr.status){
+          if(nr.status==='done')   showToast(`DONE: ${(nr.task||nr.slug||'').slice(0,40)}`,   STATUS_META['done'].color);
+          else if(nr.status==='failed') showToast(`FAILED: ${(nr.task||nr.slug||'').slice(0,40)}`, STATUS_META['failed'].color);
+          else if(nr.status==='in-progress') showToast(`ACTIVE: ${(nr.task||nr.slug||'').slice(0,40)}`, STATUS_META['in-progress'].color);
+        }}else{tasks.unshift(nr);}recentlyChanged.add(nr.id);
       }
       else if(eventType==="DELETE")tasks=tasks.filter(t=>t.id!==or.id);
       render();setTimeout(()=>recentlyChanged.delete(nr?.id||or?.id),800);
@@ -1533,36 +1538,26 @@ function _restoreExpanded(){
   });
 }
 
-// ── Toast notifications ───────────────────────────────────────────────────
+// ── Status ticker (fixed bar, replaces floating toasts) ──────────────────
 const STATUS_LABELS = {'pending':'PENDING','in-progress':'ACTIVE','done':'DONE','failed':'FAILED'};
-function showToast(msg, color='#b041ff', duration=4000){
-  const stack = $('toast-stack');
-  const t = document.createElement('div');
-  t.className = 'toast';
-
-  const dot = document.createElement('div');
-  dot.className = 'toast-dot';
+let _tickerTimer = null;
+function showToast(msg, color='#b041ff', duration=5000){
+  const ticker = $('status-ticker');
+  const dot = $('ticker-dot');
+  const msgEl = $('ticker-msg');
   dot.style.background = color;
   dot.style.boxShadow = `0 0 6px ${color}`;
-
-  const msgEl = document.createElement('div');
-  msgEl.className = 'toast-msg';
   msgEl.textContent = msg;
-
-  const btn = document.createElement('button');
-  btn.className = 'toast-dismiss';
-  btn.textContent = '✕';
-  btn.addEventListener('click', () => dismissToast(t));
-
-  t.appendChild(dot);
-  t.appendChild(msgEl);
-  t.appendChild(btn);
-  stack.appendChild(t);
-  setTimeout(()=>dismissToast(t), duration);
+  ticker.classList.add('visible');
+  if(_tickerTimer) clearTimeout(_tickerTimer);
+  _tickerTimer = setTimeout(()=>{ ticker.classList.remove('visible'); _tickerTimer=null; }, duration);
 }
+$('ticker-dismiss').addEventListener('click', ()=>{
+  $('status-ticker').classList.remove('visible');
+  if(_tickerTimer){clearTimeout(_tickerTimer);_tickerTimer=null;}
+});
 function dismissToast(t){
-  if(!t||!t.parentNode)return;
-  t.classList.add('out');
+  // legacy compat — no-op
   setTimeout(()=>t.remove(), 250);
 }
 
