@@ -1356,11 +1356,24 @@ async function initSupabase(url,key){
       render();setTimeout(()=>recentlyChanged.delete(nr?.id||or?.id),800);
     })
     .subscribe(s=>{
-      if(s==="SUBSCRIBED"){setLive("live","LIVE");hide("header-err");}
+      if(s==="SUBSCRIBED"){setLive("live","LIVE");hide("header-err");startPollFallback();}
       else if(s==="CHANNEL_ERROR"){setLive("error","SEVERED");$("header-err").textContent="⚠ SEVERED";show("header-err");}
       else if(s==="TIMED_OUT")setLive("error","TIMEOUT");
       else if(s==="CLOSED")setLive("connecting","RELINKING…");
     });
+}
+
+// ── Poll fallback: re-fetch every 15s to catch missed Realtime events ──
+let _pollInterval=null;
+function startPollFallback(){
+  if(_pollInterval)return;
+  _pollInterval=setInterval(async()=>{
+    if(!sbClient)return;
+    try{
+      const{data}=await sbClient.from("swarm_tasks").select("*").order("created_at",{ascending:false}).limit(500);
+      if(data){tasks=data;render();}
+    }catch(e){/* silent */}
+  },15000);
 }
 
 async function manualSync(){
