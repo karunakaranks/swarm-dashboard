@@ -1,7 +1,7 @@
 // Service Worker — Swarm Monitor PWA
 // Auto-update: activates immediately via skipWaiting; uses network-first for navigations for freshness.
 
-const CACHE_VERSION = 'swarm-v5';
+const CACHE_VERSION = 'swarm-v6';
 
 // Core app shell assets (must succeed for install)
 const CORE_ASSETS = [

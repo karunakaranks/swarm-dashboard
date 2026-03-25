@@ -1218,6 +1218,8 @@ function startPollFallback(){
   if(_pollInterval)return;
   _pollInterval=setInterval(async()=>{
     if(!sbClient)return;
+    // Don't overwrite search results
+    if(_searchQuery)return;
     try{
       const{data}=await sbClient.from("swarm_tasks").select("*").order("created_at",{ascending:false}).limit(500);
       if(data){
@@ -1564,18 +1566,12 @@ function _insertMobileDetail(card,t){
   // Intercept popstate (back swipe / back button)
   window.addEventListener('popstate', e=>{
     const state = e.state||{};
-    if(state.page==='home'){
-      // We're at home — block the navigation by pushing home state again
-      // This prevents the tab from closing or going to a previous real page
-      if(!isAnyOverlayOpen()) history.pushState({page:'home'},'');
-      return;
-    }
-    // An overlay was open — close it and we're now back at home state
-    if($('fs-modal').classList.contains('open'))    { closeFullscreen(); return; }
-    if($('bm-panel').classList.contains('open'))    { closeBmPanel();    return; }
-    if($('confirm-overlay').classList.contains('open')){ closeConfirm(); return; }
-    // Nothing was open, push home state to stay on page
-    history.pushState({page:'home'},'');
+    // Close any open overlay on back navigation
+    if($('fs-modal').classList.contains('open'))         { closeFullscreen(); if(state.page!=='home') history.replaceState({page:'home'},''); return; }
+    if($('bm-panel').classList.contains('open'))         { closeBmPanel();    if(state.page!=='home') history.replaceState({page:'home'},''); return; }
+    if($('confirm-overlay').classList.contains('open'))  { closeConfirm();    if(state.page!=='home') history.replaceState({page:'home'},''); return; }
+    // Nothing open — stay on page
+    if(state.page==='home'||!state.page) history.pushState({page:'home'},'');
   });
 
   // Patch open functions to push history state
@@ -1759,7 +1755,11 @@ function handleSearch(q){
   clearTimeout(_searchDebounce);
   _searchQuery=q.trim();
   _searchDebounce=setTimeout(()=>{
-    if(!_searchQuery){render();return;}
+    if(!_searchQuery){
+      // Cleared search — reload full task list
+      manualSync();
+      return;
+    }
     // FTS via Supabase
     sbClient.from("swarm_tasks").select("*")
       .textSearch("fts",_searchQuery)
