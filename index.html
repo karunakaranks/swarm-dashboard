@@ -967,15 +967,7 @@ tbody tr.task-row[data-status="failed"]     td:first-child{border-left-color:#ff
   <div class="body">
     <div class="cards" id="status-cards"></div>
 
-    <!-- Backlog section -->
-    <div id="backlog-section" style="display:none">
-      <div class="section-head" onclick="toggleBacklog()">
-        <span class="section-title" style="color:#5090ff">◇ BACKLOG</span>
-        <span id="backlog-count" style="color:var(--text3);font-size:10px"></span>
-        <span class="section-collapse-icon" id="backlog-collapse">▼</span>
-      </div>
-      <div id="backlog-grid" class="wip-grid"></div>
-    </div>
+    <!-- Backlog: click BACKLOG status card to filter -->
 
     <div id="wip-section" class="hidden">
       <div class="section-head" onclick="toggleWipCollapse()">
@@ -1131,7 +1123,7 @@ const STATUS_META={
   "backlog":    {color:"#5090ff",bg:"#000a1a",label:"BACKLOG"},
 };
 
-let sbClient=null,channel=null,tasks=[],agentFilter="all",timeFilter="all";
+let sbClient=null,channel=null,tasks=[],agentFilter="all",timeFilter="all",statusFilter="all";
 let clockTimer=null,recentlyChanged=new Set(),expandedIds=new Set();
 let _fsKeyCounter=0, _fsStore={};
 
@@ -1255,48 +1247,36 @@ function applyFilters(){
   const tf=TIME_FILTERS.find(f=>f.key===timeFilter)?.fn||(()=>true);
   let f=tasks.filter(tf);
   if(agentFilter!=="all")f=f.filter(t=>t.from_agent===agentFilter||t.to_agent===agentFilter);
+  if(statusFilter!=="all")f=f.filter(t=>t.status===statusFilter);
   return f;
 }
 
 function render(){
   const filtered=applyFilters();
-  $("filter-stats").textContent=filtered.length===tasks.length?`${tasks.length} TASKS`:`${filtered.length}/${tasks.length}`;
+  // Filter stats with active status indicator
+  let statsText=filtered.length===tasks.length?`${tasks.length} TASKS`:`${filtered.length}/${tasks.length}`;
+  if(statusFilter!=="all"){
+    const m=STATUS_META[statusFilter];
+    statsText=`<span style="color:${m.color}">${m.label}</span> ${filtered.length}/${tasks.length} <span onclick="setStatus('${statusFilter}')" style="cursor:pointer;color:var(--text3);margin-left:4px" title="Clear filter">✕</span>`;
+  }
+  $("filter-stats").innerHTML=statsText;
   // cards
   const counts={pending:0,"in-progress":0,done:0,failed:0,backlog:0};
   filtered.forEach(t=>{if(counts[t.status]!==undefined)counts[t.status]++;});
   const icons={pending:"◌","in-progress":"◉",done:"◆",failed:"◈",backlog:"◇"};
 
-  // Backlog section
-  const blTasks=filtered.filter(t=>t.status==="backlog");
-  if(!blTasks.length){hide("backlog-section");}
-  else{
-    show("backlog-section");$("backlog-count").textContent=blTasks.length+" ITEMS";
-    $("backlog-grid").innerHTML=blTasks.map(t=>{
-      const pri=t.priority||"normal";
-      const priColor=pri==="urgent"?"#ff3b6e":pri==="high"?"#ffaa00":"#5090ff";
-      return`<div class="wip-card" style="border-left:2px solid ${priColor}">
-        <div class="wip-top">
-          <div class="wip-info">
-            <div class="wip-id">${esc(t.id)}</div>
-            <div class="wip-task-text">${esc(t.task||t.slug||"—")}</div>
-          </div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <span style="color:${priColor};font-size:9px;font-family:'Orbitron',monospace;letter-spacing:.1em">${pri.toUpperCase()}</span>
-            <button onclick="approveTask('${esc(t.id)}')" style="background:#5090ff22;border:1px solid #5090ff44;color:#5090ff;border-radius:3px;padding:3px 8px;font-size:10px;cursor:pointer;font-family:inherit">APPROVE</button>
-          </div>
-        </div>
-        <div style="font-size:10px;color:var(--text3);margin-top:4px">${esc(t.from_agent||"?")} → ${esc(t.to_agent||"?")}</div>
-      </div>`;
-    }).join("");
-  }
+  // Backlog handled via status card filter — no separate section
   $("status-cards").innerHTML=Object.entries(counts).map(([st,n])=>{
     const m=STATUS_META[st];
-    return`<div class="card" style="border:1px solid ${m.color}22">
+    const active=statusFilter===st;
+    const border=active?`2px solid ${m.color}`:`1px solid ${m.color}22`;
+    const glow=active?`box-shadow:0 0 12px ${m.color}44,inset 0 0 20px ${m.color}11;`:"";
+    return`<div class="card" style="border:${border};cursor:pointer;transition:all .2s;${glow}" onclick="setStatus('${st}')">
       <div class="card-corner" style="border-color:${m.color};box-shadow:0 0 8px ${m.color}44"></div>
       <div class="card-corner-br" style="border-color:${m.color}"></div>
-      <div class="card-label" style="color:${m.color}">${icons[st]} ${m.label}</div>
+      <div class="card-label" style="color:${m.color}">${icons[st]} ${m.label}${active?" ✕":""}</div>
       <div class="card-count" style="color:${m.color};text-shadow:0 0 20px ${m.color}55">${n}</div>
-      <div class="card-sub" style="color:${m.color}">UNITS</div>
+      <div class="card-sub" style="color:${m.color}">${active?"FILTERED":"UNITS"}</div>
     </div>`;
   }).join("");
   // wip
@@ -1347,6 +1327,7 @@ function render(){
         <td class="td-agent">${esc(t.from_agent||"—")}</td>
         <td class="td-agent">${esc(t.to_agent||"any")}</td>
         <td class="td-time">${timeAgo(t.created_at)}</td>
+        <td>${t.status==="backlog"?`<button onclick="event.stopPropagation();approveTask('${esc(t.id)}')" style="background:#5090ff22;border:1px solid #5090ff44;color:#5090ff;border-radius:3px;padding:2px 8px;font-size:9px;cursor:pointer;font-family:'Orbitron',monospace;letter-spacing:.08em">APPROVE</button>`:""}</td>
       </tr>`;
     }).join("");
     // Restore any previously expanded rows
@@ -1799,18 +1780,12 @@ async function approveTask(id){
   if(data){tasks=data;render();}
 }
 
-let _backlogCollapsed=false;
-function toggleBacklog(){
-  _backlogCollapsed=!_backlogCollapsed;
-  $("backlog-grid").style.display=_backlogCollapsed?"none":"";
-  $("backlog-collapse").textContent=_backlogCollapsed?"▶":"▼";
-}
-
 function buildAgentFilters(){
   $("agent-filters").innerHTML=AGENTS.map(a=>
     `<button class="filt-btn ${a===agentFilter?"active":""}" onclick="setAgent('${a}')">${AGENT_LABELS[a]}</button>`
   ).join("");
 }
+function setStatus(s){statusFilter=(statusFilter===s)?"all":s;render();}
 function setAgent(a){agentFilter=a;buildAgentFilters();render();}
 function buildTimeFilters(){
   $("time-filters").innerHTML=TIME_FILTERS.map(f=>
