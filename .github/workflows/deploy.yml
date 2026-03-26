@@ -42,8 +42,10 @@ jobs:
 
       - name: Prepare deploy directory
         run: |
-          mkdir -p _deploy/icons
+          mkdir -p _deploy/icons _deploy/css _deploy/js
           cp index.html manifest.json sw.js .nojekyll _deploy/
+          cp css/style.css _deploy/css/
+          cp js/app.js _deploy/js/
           cp icons/* _deploy/icons/
 
       - name: Setup Pages
