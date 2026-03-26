@@ -57,6 +57,11 @@ function looksLikeMarkdown(text){
 
 // ── Utils ──────────────────────────────────────────────────────────────────
 function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function truncTask(s,max){
+  const t=String(s||"");
+  if(t.length<=max)return esc(t);
+  return`<span class="task-trunc">${esc(t.slice(0,max))}…</span>`;
+}
 function formatDuration(ms){
   if(!ms||ms<0)return"—";
   const s=Math.floor(ms/1000),m=Math.floor(s/60),h=Math.floor(m/60);
@@ -190,7 +195,7 @@ function render(){
         <div class="wip-top">
           <div class="wip-info">
             <div class="wip-id">${esc(t.id)}</div>
-            <div class="wip-task-text">${esc(t.task||t.slug||"—")}</div>
+            <div class="wip-task-text">${truncTask(t.task||t.slug||"—",120)}</div>
           </div>
           <div class="wip-timing">
             <div class="wip-timer" data-taken="${esc(t.taken_at||"")}">${formatDuration(el)}</div>
@@ -218,7 +223,7 @@ function render(){
       return`<tr class="task-row${fl}" data-status="${esc(t.status)}" onclick="toggleRow(this,'${esc(btoa(unescape(encodeURIComponent(JSON.stringify(t)))))}')">
         <td class="td-id">${esc((t.id||"—").slice(0,17))}</td>
         <td>${badge(t.status)}</td>
-        <td class="td-task">${esc(t.task||t.slug||"—")}</td>
+        <td class="td-task">${truncTask(t.task||t.slug||"—",80)}</td>
         <td class="td-agent">${esc(t.from_agent||"—")}</td>
         <td class="td-agent">${esc(t.to_agent||"any")}</td>
         <td class="td-time">${timeAgo(t.created_at)}</td>
@@ -362,7 +367,7 @@ function renderMobileCards(filtered){
     return`<div class="task-card-item${fl}" data-status="${esc(t.status)}"
       onclick="toggleMobileCard(this,'${esc(btoa(unescape(encodeURIComponent(JSON.stringify(t)))))}')">
       <div class="task-card-top">
-        <div class="task-card-name">${esc(t.task||t.slug||'—')}</div>
+        <div class="task-card-name">${truncTask(t.task||t.slug||'—',100)}</div>
         ${badge(t.status)}
       </div>
       <div class="task-card-bottom">

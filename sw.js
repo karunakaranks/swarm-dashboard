@@ -1,7 +1,7 @@
 // Service Worker — Hive Command PWA
 // Auto-update: activates immediately via skipWaiting; uses network-first for navigations for freshness.
 
-const CACHE_VERSION = 'hive-v3';
+const CACHE_VERSION = 'hive-v4';
 
 // Core app shell assets (must succeed for install)
 const CORE_ASSETS = [
