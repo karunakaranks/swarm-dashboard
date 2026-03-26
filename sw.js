@@ -1,7 +1,7 @@
-// Service Worker — Swarm Monitor PWA
+// Service Worker — Hive Command PWA
 // Auto-update: activates immediately via skipWaiting; uses network-first for navigations for freshness.
 
-const CACHE_VERSION = 'swarm-v6';
+const CACHE_VERSION = 'hive-v1';
 
 // Core app shell assets (must succeed for install)
 const CORE_ASSETS = [
@@ -21,7 +21,7 @@ const OPTIONAL_ASSETS = [
 // Offline fallback HTML
 const OFFLINE_HTML = `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Swarm Monitor — Offline</title>
+<title>Hive Command — Offline</title>
 <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#07050e;color:#e8d5ff;font-family:monospace;
 display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center}
 .wrap{padding:2rem}.icon{font-size:3rem;margin-bottom:1rem}h1{font-size:1.2rem;color:#b041ff;margin-bottom:.5rem}
@@ -29,7 +29,7 @@ p{color:#b090d8;font-size:.85rem;line-height:1.5}
 button{margin-top:1.5rem;background:#b041ff;color:#fff;border:none;border-radius:4px;padding:10px 24px;
 font-family:inherit;cursor:pointer;text-transform:uppercase;letter-spacing:1px}
 button:hover{filter:brightness(1.2)}</style></head>
-<body><div class="wrap"><div class="icon">◈</div><h1>SWARM OFFLINE</h1>
+<body><div class="wrap"><div class="icon">◈</div><h1>HIVE OFFLINE</h1>
 <p>Network connection unavailable.<br>Cached data may be stale.</p>
 <button onclick="location.reload()">Retry Connection</button></div></body></html>`;
 

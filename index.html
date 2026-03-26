@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>◈ Swarm Monitor</title>
+<title>◈ Hive Command</title>
 <link rel="manifest" href="manifest.json"/>
 <meta name="theme-color" content="#b041ff"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="Swarm"/>
+<meta name="apple-mobile-web-app-title" content="Hive"/>
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://*.supabase.co wss://*.supabase.co; img-src 'self' data:;"/>
 <link rel="apple-touch-icon" href="icons/icon.svg"/>
 <link rel="icon" type="image/svg+xml" href="icons/icon.svg"/>
@@ -901,7 +901,7 @@ tbody tr.task-row[data-status="failed"]     td:first-child{border-left-color:#ff
 <div id="setup-screen" class="setup-wrap hidden">
   <svg class="setup-ghost" xmlns="http://www.w3.org/2000/svg"><use href="#sc-ghost"/></svg>
   <div class="setup-box">
-    <div class="setup-eyebrow">◈ SWARM MONITOR // ZERG NETWORK</div>
+    <div class="setup-eyebrow">◈ HIVE COMMAND // AGENT NETWORK</div>
     <div class="setup-title">ESTABLISH LINK</div>
     <div class="setup-sub">Supabase URL and <strong>public anon key only</strong> are stored in browser localStorage on this device. Never use a service role or private key in the browser. Live sync via Supabase Realtime.</div>
     <div class="setup-fields">
@@ -927,8 +927,8 @@ tbody tr.task-row[data-status="failed"]     td:first-child{border-left-color:#ff
       <svg class="header-ghost" xmlns="http://www.w3.org/2000/svg"><use href="#sc-ghost"/></svg>
       <div class="header-left">
         <div>
-          <div class="brand-name">◈ SWARM MONITOR</div>
-          <div class="brand-sub">KISSFLOW-XG // TASK BUS</div>
+          <div class="brand-name">◈ HIVE COMMAND</div>
+          <div class="brand-sub">KISSFLOW-XG // MULTI-AGENT ORCHESTRATOR</div>
         </div>
       </div>
       <div class="header-right">
@@ -2063,7 +2063,7 @@ if('serviceWorker' in navigator){
 
 <!-- PWA Install Banner -->
 <div id="pwa-install-banner" class="pwa-install-banner hidden">
-  <div class="pwa-install-text"><strong>◈ Swarm Monitor</strong> — Install as an app for quick access</div>
+  <div class="pwa-install-text"><strong>◈ Hive Command</strong> — Install as an app for quick access</div>
   <button class="pwa-install-btn" onclick="if(deferredInstallPrompt){deferredInstallPrompt.prompt();deferredInstallPrompt.userChoice.then(()=>{deferredInstallPrompt=null;this.closest('.pwa-install-banner').classList.add('hidden');})}">Install</button>
   <button class="pwa-install-dismiss" onclick="this.closest('.pwa-install-banner').classList.add('hidden')" title="Dismiss">✕</button>
 </div>

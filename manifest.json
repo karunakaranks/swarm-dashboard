@@ -1,7 +1,7 @@
 {
-  "name": "Swarm Monitor",
-  "short_name": "Swarm",
-  "description": "Real-time swarm task monitoring dashboard",
+  "name": "Hive Command",
+  "short_name": "Hive",
+  "description": "Multi-agent orchestrator dashboard",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -34,7 +34,7 @@
       "name": "Dashboard",
       "short_name": "Dashboard",
       "url": "./",
-      "description": "Open the swarm monitor dashboard",
+      "description": "Open the Hive Command dashboard",
       "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
