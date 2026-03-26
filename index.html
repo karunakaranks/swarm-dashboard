@@ -544,6 +544,27 @@ tbody tr.task-row[data-status="failed"]     td:first-child{border-left-color:#ff
 .pwa-install-dismiss{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:4px;}
 .pwa-install-dismiss:hover{color:var(--text1);}
 
+/* ── Cost panel ── */
+.cost-panel{display:none;margin:8px 0;}
+.cost-panel.open{display:block;}
+.cost-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.cost-header-left{display:flex;align-items:center;gap:10px;}
+.cost-total{font-family:'Orbitron',monospace;font-size:22px;font-weight:700;color:#7fff3a;text-shadow:0 0 12px #7fff3a44;}
+.cost-sub{font-size:10px;color:var(--text3);letter-spacing:.08em;}
+.cost-filters{display:flex;gap:4px;}
+.cost-filters button{background:var(--bg2);border:1px solid var(--border);color:var(--text2);border-radius:3px;
+  padding:3px 8px;font-size:9px;cursor:pointer;font-family:'Orbitron',monospace;letter-spacing:.08em;}
+.cost-filters button.active{border-color:#7fff3a;color:#7fff3a;}
+.cost-graph{display:flex;align-items:flex-end;gap:3px;height:80px;padding:8px 0;}
+.cost-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.cost-bar{width:100%;min-width:8px;border-radius:2px 2px 0 0;transition:height .3s ease;
+  background:linear-gradient(to top,#7fff3a22,#7fff3a88);}
+.cost-bar-label{font-size:8px;color:var(--text3);white-space:nowrap;}
+.cost-bar-value{font-size:8px;color:#7fff3a;font-family:'Orbitron',monospace;}
+.cost-agents{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;}
+.cost-agent{font-size:10px;color:var(--text2);}
+.cost-agent span{color:#7fff3a;font-family:'Orbitron',monospace;}
+
 /* ── Pull-to-refresh indicator ── */
 .ptr-indicator{
   position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-100%);
@@ -937,6 +958,7 @@ tbody tr.task-row[data-status="failed"]     td:first-child{border-left-color:#ff
           <div class="live-dot"></div>
           <span id="live-label">LINKING…</span>
         </div>
+        <button class="icon-btn" id="cost-toggle-btn" onclick="toggleCostPanel()">$ COST</button>
         <button class="icon-btn" id="bm-open-btn">☆ SAVED</button>
         <button class="icon-btn" id="refresh-btn">↺ SYNC</button>
         <button class="disc-btn" id="disconnect-btn">⏏</button>
@@ -966,6 +988,24 @@ tbody tr.task-row[data-status="failed"]     td:first-child{border-left-color:#ff
 
   <div class="body">
     <div class="cards" id="status-cards"></div>
+
+    <!-- Cost panel (toggle via $ COST button) -->
+    <div class="cost-panel" id="cost-panel">
+      <div class="cost-header">
+        <div class="cost-header-left">
+          <div class="cost-total" id="cost-total">$0.00</div>
+          <div class="cost-sub" id="cost-period">LAST 7 DAYS</div>
+        </div>
+        <div class="cost-filters">
+          <button onclick="setCostDays(1)" id="cost-1d">1D</button>
+          <button onclick="setCostDays(7)" id="cost-7d" class="active">7D</button>
+          <button onclick="setCostDays(30)" id="cost-30d">30D</button>
+          <button onclick="setCostDays(0)" id="cost-all">ALL</button>
+        </div>
+      </div>
+      <div class="cost-graph" id="cost-graph"></div>
+      <div class="cost-agents" id="cost-agents"></div>
+    </div>
 
     <!-- Backlog: click BACKLOG status card to filter -->
 
@@ -1786,6 +1826,76 @@ function buildAgentFilters(){
   ).join("");
 }
 function setStatus(s){statusFilter=(statusFilter===s)?"all":s;render();}
+
+// ── Cost panel ────────────────────────────────────────────────────────────
+let _costDays=7;
+let _costOpen=false;
+
+function toggleCostPanel(){
+  _costOpen=!_costOpen;
+  const panel=$('cost-panel');
+  if(_costOpen){panel.classList.add('open');renderCost();}
+  else panel.classList.remove('open');
+}
+
+function setCostDays(d){
+  _costDays=d;
+  document.querySelectorAll('.cost-filters button').forEach(b=>b.classList.remove('active'));
+  const id=d===0?'cost-all':d===1?'cost-1d':d===7?'cost-7d':'cost-30d';
+  $(id).classList.add('active');
+  renderCost();
+}
+
+function renderCost(){
+  if(!tasks.length)return;
+  // Filter tasks with cost
+  let costed=tasks.filter(t=>(t.cost_usd||0)>0);
+  if(_costDays>0){
+    const cutoff=Date.now()-_costDays*86400000;
+    costed=costed.filter(t=>new Date(t.created_at).getTime()>cutoff);
+  }
+
+  // Total
+  const total=costed.reduce((s,t)=>s+(t.cost_usd||0),0);
+  $('cost-total').textContent='$'+total.toFixed(4);
+  const label=_costDays===0?'ALL TIME':_costDays===1?'TODAY':'LAST '+_costDays+' DAYS';
+  $('cost-period').textContent=label+' / '+costed.length+' TASKS';
+
+  // Group by day
+  const byDay={};
+  costed.forEach(t=>{
+    const d=t.created_at?t.created_at.slice(0,10):'?';
+    if(!byDay[d])byDay[d]={cost:0,tasks:0};
+    byDay[d].cost+=(t.cost_usd||0);
+    byDay[d].tasks++;
+  });
+  const days=Object.entries(byDay).sort((a,b)=>a[0].localeCompare(b[0]));
+  const maxCost=Math.max(...days.map(([,v])=>v.cost),0.01);
+
+  // Render bars
+  $('cost-graph').innerHTML=days.map(([day,v])=>{
+    const pct=Math.max(4,Math.round(v.cost/maxCost*100));
+    const short=day.slice(5); // MM-DD
+    return`<div class="cost-bar-wrap">
+      <div class="cost-bar-value">$${v.cost.toFixed(2)}</div>
+      <div class="cost-bar" style="height:${pct}%"></div>
+      <div class="cost-bar-label">${short}</div>
+    </div>`;
+  }).join('')||'<div style="color:var(--text3);font-size:11px;padding:20px">No cost data in this period</div>';
+
+  // By agent
+  const byAgent={};
+  costed.forEach(t=>{
+    const a=t.to_agent||'?';
+    if(!byAgent[a])byAgent[a]={cost:0,tasks:0};
+    byAgent[a].cost+=(t.cost_usd||0);
+    byAgent[a].tasks++;
+  });
+  $('cost-agents').innerHTML=Object.entries(byAgent)
+    .sort((a,b)=>b[1].cost-a[1].cost)
+    .map(([a,v])=>`<div class="cost-agent">${a}: <span>$${v.cost.toFixed(4)}</span> (${v.tasks})</div>`)
+    .join('');
+}
 function setAgent(a){agentFilter=a;buildAgentFilters();render();}
 function buildTimeFilters(){
   $("time-filters").innerHTML=TIME_FILTERS.map(f=>
