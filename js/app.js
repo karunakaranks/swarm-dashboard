@@ -686,10 +686,12 @@ function openBacklogForm(){
   hide("backlog-error");
   $("backlog-submit").disabled=false;
   $("backlog-submit").textContent="ADD TO BACKLOG →";
+  $("backlog-overlay").classList.remove("hidden");
   $("backlog-overlay").classList.add("open");
 }
 function closeBacklogForm(){
   $("backlog-overlay").classList.remove("open");
+  $("backlog-overlay").classList.add("hidden");
 }
 async function submitBacklog(){
   if(!sbClient)return;
