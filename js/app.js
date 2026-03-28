@@ -679,7 +679,13 @@ async function approveTask(id){
 }
 
 // ── New backlog form ──────────────────────────────────────────────────────
+function _populateAgentDropdowns(){
+  const real=AGENTS.filter(a=>a!=="all");
+  $("backlog-from").innerHTML='<option value="">— select agent —</option>'+real.map(a=>`<option value="${a}">${a.toUpperCase()}</option>`).join("");
+  $("backlog-agent").innerHTML='<option value="">— any agent —</option>'+real.map(a=>`<option value="${a}">${a.toUpperCase()}</option>`).join("");
+}
 function openBacklogForm(){
+  _populateAgentDropdowns();
   $("backlog-task").value="";
   $("backlog-context").value="";
   $("backlog-from").value="";
