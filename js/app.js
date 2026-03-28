@@ -682,6 +682,7 @@ async function approveTask(id){
 function openBacklogForm(){
   $("backlog-task").value="";
   $("backlog-context").value="";
+  $("backlog-from").value="";
   $("backlog-agent").value="";
   hide("backlog-error");
   $("backlog-submit").disabled=false;
@@ -701,10 +702,16 @@ async function submitBacklog(){
     show("backlog-error");
     return;
   }
+  const fromAgent=$("backlog-from").value;
+  if(!fromAgent){
+    $("backlog-error").textContent="⚠ Select an agent identity to submit as.";
+    show("backlog-error");
+    return;
+  }
   hide("backlog-error");
   $("backlog-submit").disabled=true;
   $("backlog-submit").textContent="ADDING…";
-  const row={status:"backlog",task:task};
+  const row={status:"backlog",task:task,from_agent:fromAgent};
   const context=$("backlog-context").value.trim();
   const agent=$("backlog-agent").value.trim();
   if(context)row.context=context;
