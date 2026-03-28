@@ -411,6 +411,7 @@ function _insertMobileDetail(card,t){
     ${t.taken_at?`<div><div style="color:var(--text3);font-size:9px;font-family:'Orbitron',monospace;letter-spacing:.1em;margin-bottom:2px">CLAIMED</div><div style="color:var(--text1)">${fmt(t.taken_at)}</div></div>`:''}
     ${t.done_at?`<div><div style="color:var(--text3);font-size:9px;font-family:'Orbitron',monospace;letter-spacing:.1em;margin-bottom:2px">DONE</div><div style="color:var(--text1)">${fmt(t.done_at)}</div></div>`:''}
   </div>
+  ${t.status==="backlog"?`<button onclick="event.stopPropagation();approveTask('${esc(t.id)}')" style="background:#5090ff22;border:1px solid #5090ff44;color:#5090ff;border-radius:3px;padding:6px 14px;font-size:10px;cursor:pointer;font-family:'Orbitron',monospace;letter-spacing:.08em;margin-bottom:10px;width:100%">APPROVE → PENDING</button>`:''}
   ${t.result?`${_renderField('// RESULT',t.result,t.task||t.slug)}`:''}
   ${t.context?`${_renderField('// CONTEXT',t.context,t.task||t.slug)}`:''}`;
   card.after(d);
