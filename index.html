@@ -264,6 +264,7 @@
           <div class="live-dot"></div>
           <span id="live-label">LINKING…</span>
         </div>
+        <button class="icon-btn backlog-add-btn" id="backlog-add-btn">+ NEW</button>
         <button class="icon-btn" id="cost-toggle-btn" onclick="toggleCostPanel()">$ COST</button>
         <button class="icon-btn" id="bm-open-btn">☆ SAVED</button>
         <button class="icon-btn" id="refresh-btn">↺ SYNC</button>
@@ -446,6 +447,33 @@
     <div class="confirm-actions">
       <button class="confirm-cancel" id="confirm-cancel">CANCEL</button>
       <button class="confirm-ok" id="confirm-ok">DISCONNECT</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── New Backlog modal ── -->
+<div id="backlog-overlay" class="backlog-overlay" role="dialog" aria-modal="true">
+  <div class="backlog-box">
+    <div class="backlog-box-accent"></div>
+    <div class="backlog-eyebrow">◇ NEW BACKLOG ITEM</div>
+    <div class="backlog-fields">
+      <div>
+        <label class="field-label">// TASK DESCRIPTION *</label>
+        <textarea id="backlog-task" class="field-input backlog-textarea" placeholder="Describe the task…" rows="3"></textarea>
+      </div>
+      <div>
+        <label class="field-label">// CONTEXT (OPTIONAL)</label>
+        <textarea id="backlog-context" class="field-input backlog-textarea" placeholder="Additional context, instructions, or input data…" rows="4"></textarea>
+      </div>
+      <div>
+        <label class="field-label">// TARGET AGENT (OPTIONAL)</label>
+        <input id="backlog-agent" class="field-input" type="text" placeholder="e.g. mac-claude, vm-claude"/>
+      </div>
+      <div id="backlog-error" class="setup-error hidden"></div>
+      <div class="backlog-actions">
+        <button class="confirm-cancel" id="backlog-cancel">CANCEL</button>
+        <button class="backlog-submit" id="backlog-submit">ADD TO BACKLOG →</button>
+      </div>
     </div>
   </div>
 </div>
