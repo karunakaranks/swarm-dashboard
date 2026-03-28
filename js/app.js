@@ -678,6 +678,53 @@ async function approveTask(id){
   if(data){tasks=data;render();}
 }
 
+// ── New backlog form ──────────────────────────────────────────────────────
+function openBacklogForm(){
+  $("backlog-task").value="";
+  $("backlog-context").value="";
+  $("backlog-agent").value="";
+  hide("backlog-error");
+  $("backlog-submit").disabled=false;
+  $("backlog-submit").textContent="ADD TO BACKLOG →";
+  $("backlog-overlay").classList.add("open");
+}
+function closeBacklogForm(){
+  $("backlog-overlay").classList.remove("open");
+}
+async function submitBacklog(){
+  if(!sbClient)return;
+  const task=$("backlog-task").value.trim();
+  if(!task){
+    $("backlog-error").textContent="⚠ Task description is required.";
+    show("backlog-error");
+    return;
+  }
+  hide("backlog-error");
+  $("backlog-submit").disabled=true;
+  $("backlog-submit").textContent="ADDING…";
+  const row={status:"backlog",task:task};
+  const context=$("backlog-context").value.trim();
+  const agent=$("backlog-agent").value.trim();
+  if(context)row.context=context;
+  if(agent)row.to_agent=agent;
+  const{error}=await sbClient.from("swarm_tasks").insert(row);
+  if(error){
+    $("backlog-error").textContent="⚠ "+error.message;
+    show("backlog-error");
+    $("backlog-submit").disabled=false;
+    $("backlog-submit").textContent="ADD TO BACKLOG →";
+    return;
+  }
+  showToast("BACKLOG ADDED",STATUS_META['backlog'].color);
+  closeBacklogForm();
+  const{data}=await sbClient.from("swarm_tasks").select("*").order("created_at",{ascending:false}).limit(500);
+  if(data){tasks=data;render();}
+}
+$("backlog-add-btn").addEventListener("click",openBacklogForm);
+$("backlog-cancel").addEventListener("click",closeBacklogForm);
+$("backlog-overlay").addEventListener("click",e=>{if(e.target===$("backlog-overlay"))closeBacklogForm();});
+$("backlog-submit").addEventListener("click",submitBacklog);
+
 function buildAgentFilters(){
   $("agent-filters").innerHTML=AGENTS.map(a=>
     `<button class="filt-btn ${a===agentFilter?"active":""}" onclick="setAgent('${a}')">${AGENT_LABELS[a]}</button>`
@@ -981,6 +1028,7 @@ $("confirm-ok").addEventListener("click", ()=>{
 // ── Global keyboard handler ───────────────────────────────────────────────
 document.addEventListener("keydown", e => {
   if(e.key === "Escape"){
+    if($("backlog-overlay").classList.contains("open")){ closeBacklogForm(); return; }
     if($("fs-modal").classList.contains("open")){ closeFullscreen(); return; }
     if($("bm-panel").classList.contains("open")){ closeBmPanel(); return; }
     if($("confirm-overlay").classList.contains("open")){ closeConfirm(); return; }

@@ -185,7 +185,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:998;
 .body{padding:16px;display:flex;flex-direction:column;gap:16px;position:relative;z-index:1;}
 
 /* ── Cards ── */
-.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.cards{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
 .card{border-radius:4px;padding:14px 16px;display:flex;flex-direction:column;gap:5px;
   position:relative;overflow:hidden;background:var(--bg1);transition:box-shadow .2s;}
 .card-corner{position:absolute;top:0;left:0;width:20px;height:20px;border-top:2px solid;border-left:2px solid;}
@@ -409,6 +409,38 @@ td{padding:8px 10px;}
   font-family:'Orbitron',monospace;letter-spacing:.08em;transition:all .15s;
 }
 .confirm-ok:hover{background:#1a0010;box-shadow:0 0 12px var(--red-dim);}
+
+/* ── New Backlog modal ── */
+.backlog-overlay{
+  display:none;position:fixed;inset:0;z-index:600;
+  background:rgba(4,2,10,.88);backdrop-filter:blur(4px);
+  align-items:center;justify-content:center;
+}
+.backlog-overlay.open{display:flex;}
+.backlog-box{
+  background:var(--bg1);border:1px solid #103060;border-radius:4px;
+  padding:28px 32px;width:100%;max-width:480px;margin:20px;
+  box-shadow:0 0 60px #5090ff14;position:relative;
+}
+.backlog-box-accent{position:absolute;top:-1px;left:20px;right:20px;height:2px;
+  background:linear-gradient(90deg,transparent,#5090ff,transparent);}
+.backlog-eyebrow{color:#5090ff;font-family:'Orbitron',monospace;font-size:12px;
+  font-weight:700;letter-spacing:.12em;margin-bottom:16px;}
+.backlog-fields{display:flex;flex-direction:column;gap:14px;}
+.backlog-textarea{resize:vertical;min-height:40px;max-height:200px;line-height:1.6;}
+.backlog-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:4px;}
+.backlog-submit{
+  background:transparent;border:1px solid #5090ff;border-radius:3px;
+  color:#5090ff;padding:8px 18px;font-size:12px;cursor:pointer;
+  font-family:'Orbitron',monospace;letter-spacing:.08em;transition:all .15s;
+}
+.backlog-submit:hover{background:#000a1a;box-shadow:0 0 12px #5090ff33;}
+.backlog-submit:disabled{border-color:var(--border);color:var(--text3);cursor:default;}
+.backlog-add-btn{border-color:#5090ff44;color:#5090ff!important;}
+.backlog-add-btn:hover{border-color:#5090ff!important;color:#5090ff!important;}
+@media(max-width:480px){
+  .backlog-box{padding:24px 18px;margin:12px;}
+}
 
 /* ── Markdown theme — scoped under .md-body (marked.js default output) ── */
 .md-body { font-size:12px; line-height:1.7; color:var(--text1); }
