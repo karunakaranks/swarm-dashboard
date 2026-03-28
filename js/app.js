@@ -717,7 +717,7 @@ async function submitBacklog(){
   hide("backlog-error");
   $("backlog-submit").disabled=true;
   $("backlog-submit").textContent="ADDING…";
-  const row={status:"backlog",task:task,from_agent:fromAgent};
+  const row={id:crypto.randomUUID(),status:"backlog",task:task,from_agent:fromAgent};
   const context=$("backlog-context").value.trim();
   const agent=$("backlog-agent").value.trim();
   if(context)row.context=context;
