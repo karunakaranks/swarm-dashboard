@@ -717,11 +717,19 @@ async function submitBacklog(){
   hide("backlog-error");
   $("backlog-submit").disabled=true;
   $("backlog-submit").textContent="ADDING…";
-  const row={id:crypto.randomUUID(),status:"backlog",task:task,from_agent:fromAgent};
   const context=$("backlog-context").value.trim();
   const agent=$("backlog-agent").value.trim();
-  if(context)row.context=context;
-  if(agent)row.to_agent=agent;
+  const row={
+    id:crypto.randomUUID(),
+    status:"backlog",
+    task:task,
+    slug:task,
+    from_agent:fromAgent,
+    to_agent:agent||"any",
+    context:context||"",
+    result:"",
+    created_at:new Date().toISOString()
+  };
   const{error}=await sbClient.from("swarm_tasks").insert(row);
   if(error){
     $("backlog-error").textContent="⚠ "+error.message;
